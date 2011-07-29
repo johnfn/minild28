@@ -1,0 +1,13 @@
+# minild28
+
+My entry to the Mini LD 28, a 48 game development competition.
+
+## Usage
+
+`lein run`, with a little bit of luck.
+
+## License
+
+Copyright (C) 2011.
+
+Distributed under the Eclipse Public License, the same as Clojure.
