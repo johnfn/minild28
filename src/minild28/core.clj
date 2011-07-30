@@ -80,7 +80,12 @@
   (doseq [guy (:guys state)]
     (do
       (.setColor gfx (java.awt.Color/BLACK))
-      (draw-tile (:x guy) (:y guy) \c gfx))))
+      (draw-tile (:x guy) (:y guy) \c gfx)))
+  (doseq [guy (:badguys state)]
+    (do
+      (.setColor gfx (java.awt.Color/BLACK))
+      (draw-tile (:x guy) (:y guy) \c gfx)))
+  )
 
 (defn render-game [gfx state]
   (.setColor gfx (java.awt.Color/BLACK))
@@ -118,15 +123,16 @@
 
 (defn update-game-state [state]
   {:guys (update-guys (:guys state))
+   :badguys (update-guys (:badguys state))
    :turn (update-turn (:turn state))})
 
 (defn game [frame]
          ; This is the starting state of the entire game.
          ; At first I thought it was weird, but then I realized I kinda like 
          ; how Clojure almost requires you to group all state together...
-  (loop [state { :guys [{:type :guy :x 8    :y 8}
-                        {:type :guy :x 10   :y 8}
-                        {:type :badguy :x 1 :y 2}]
+  (loop [state { :guys    [{:type :guy :x 18  :y 18}
+                           {:type :guy :x 16  :y 18}]
+                 :badguys [{:type :guy :x 1 :y 2}]
                  :turn :yours
                 }]
   (println "Hi")
