@@ -37,6 +37,8 @@
 (defn log [something]
   (reset! output (subvec (conj @output (str something)) 1 6)))
 
+(defmacro dbg[x] `(let [x# ~x] (log "dbg:" '~x "=" x#) x#))
+
 (def map1
   [
     "01000000000000000000"
@@ -99,13 +101,21 @@
        (if (< t-y (- *map-size* 1)) [t-x (+ t-y 1)] nil)
      )))
 
+(defn to-vect [x]
+  "List to vector."
+  (apply vector x))
+
 (defn draw-walk-radius [guy gfx]
   (defn get-walkable-tiles [tiles dist-left]
-    (apply concat (map neighbors tiles)))
+    (if (= dist-left 0)
+      tiles
+      (let [tiles-new (get-walkable-tiles tiles (- dist-left 1))
+            neighbors-new (apply concat (map neighbors tiles-new))
+            all-tiles (concat neighbors-new tiles-new)]
+        (to-vect all-tiles))))
 
   (doseq [tile (get-walkable-tiles [[(:x guy) (:y guy)]] 3)]
     (do 
-      (log tile)
       (draw-tile (first tile) (second tile) \h gfx)))
 )
 
@@ -144,8 +154,7 @@
     (.setFont gfx font)
     (.drawString gfx (str @output) 10 480)
     (.drawString gfx (:message state) 10 460)
-  )
-)
+  ))
 
 (defn double-buffer-render [p state]
   (let [bfs (.getBufferStrategy p)
@@ -159,13 +168,6 @@
 (defn key-down? [x]
   (if (@keys-down x) 1 0))
 
-(defn key-up? [x]
-  (if (@keys-up x)
-    (do
-      (swap! keys-up disj x)
-      true)
-    false))
-
 ;(defn update-player [player]
 ;  (let [old-x (:x player)
 ;        old-y (:y player)
@@ -173,30 +175,33 @@
 ;        new-y (+ old-y (key-down? 83) (- (key-down? 87)))]
 ;    {:x new-x :y new-y}))
 
+(defn key-up? [key]
+  (let [was-in? (@keys-up key)]
+    (swap! keys-up disj key)
+    was-in?))
 
-(defn update-game-state [state keys-down keys-up]
+(defn update-game-state [state keys-down]
   ; keys-down are the keys that are currently being held down.
   ; keys-up are the keys that were just released.
-  (defn update-turn [turn keys-down keys-up]
+  (defn update-turn [turn keys-down]
     turn)
 
-  (defn update-guys [guys keys-down keys-up]
+  (defn update-guys [guys keys-down]
     guys)
 
-  (defn update-selection [selection keys-down keys-up]
-    (let [up? (key-up? 78)
-          old-val (:selection state)]
+  (defn update-selection [selection keys-down]
+    (let [up? (key-up? 78)]
       (if up?
-        (mod (+ selection 1) (count (:guys state))) 
-        old-val)))
+        (- 1 selection)
+        selection)))
 
   (defn update-message [old-message]
     old-message)
 
-  {:guys (update-guys (:guys state) keys-down keys-up)
-   :badguys (update-guys (:badguys state) keys-down keys-up)
-   :selection (update-selection (:selection state) keys-down keys-up)
-   :turn (update-turn (:turn state) keys-down keys-up)
+  {:guys (update-guys (:guys state) keys-down)
+   :badguys (update-guys (:badguys state) keys-down)
+   :selection (update-selection (:selection state) keys-down)
+   :turn (update-turn (:turn state) keys-down)
    :message (update-message (:message state))
    :tick (+ (:tick state) 1)
   })
@@ -214,10 +219,11 @@
                  :message "N to switch selection. Arrow keys to choose where to walk, Enter to go there."
                  :tick 0
                 }]
+    (reset! keys-up #{})
     (double-buffer-render frame state)
-    (Thread/sleep 25)
+    (Thread/sleep 15)
     (.setTitle frame (str @keys-up))
-    (recur (update-game-state state @keys-down @keys-up))))
+    (recur (update-game-state state @keys-down))))
 
 (defn -main[]
   (def panel
