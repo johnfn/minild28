@@ -61,6 +61,8 @@
     "00000000000000000000" 
     ])
 
+(def *map-size* (count map1))
+
 (def dark-green (java.awt.Color. 60 140 60))
 (def light-green (java.awt.Color. 120 190 120))
 
@@ -68,6 +70,7 @@
   (let [y-offs 25 x-offs 10]
     (.setColor gfx (cond (= type \1) (java.awt.Color/BLUE)
                          (= type \0) dark-green
+                         (= type \h) light-green
                          (= type \c) (java.awt.Color/BLACK)
                          (= type \b) (java.awt.Color/RED)
                          (= type \S) (java.awt.Color/WHITE)
@@ -83,6 +86,28 @@
       (let [ch (nth (nth map1 y) x)]
         (draw-tile x y ch gfx)))))
 
+(defn join-non-nil [& args]
+  "Given args, merges all of them into a list, first removing any nils"
+  (filter #(not (nil? %)) args))
+
+(defn neighbors [tile]
+  (let [[t-x t-y] tile]
+     (join-non-nil
+       (if (> t-x 0) [(- t-x 1) t-y] nil)
+       (if (> t-y 0) [t-x (- t-y 1)] nil)
+       (if (< t-x (- *map-size* 1)) [(+ t-x 1) t-y] nil)
+       (if (< t-y (- *map-size* 1)) [t-x (+ t-y 1)] nil)
+     )))
+
+(defn draw-walk-radius [guy gfx]
+  (defn get-walkable-tiles [tiles dist-left]
+    (apply concat (map neighbors tiles)))
+
+  (doseq [tile (get-walkable-tiles [[(:x guy) (:y guy)]] 3)]
+    (do 
+      (log tile)
+      (draw-tile (first tile) (second tile) \h gfx)))
+)
 
 (defn render-state [gfx state]
   ; your guys
@@ -96,7 +121,7 @@
     ;uses the ([1 2] 0) way of accessing elems
     (let [selected-guy ((:guys state) (:selection state))] 
       (draw-tile (:x selected-guy) (:y selected-guy) \S gfx)
-      ;(draw-walk-radius selected-guy) 
+      (draw-walk-radius selected-guy gfx) 
       ))
 
   ; bad guys
