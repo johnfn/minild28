@@ -61,10 +61,13 @@
     "00000000000000000000" 
     ])
 
+(def dark-green (java.awt.Color. 60 140 60))
+(def light-green (java.awt.Color. 120 190 120))
+
 (defn draw-tile [x-rel y-rel type gfx]
   (let [y-offs 25 x-offs 10]
     (.setColor gfx (cond (= type \1) (java.awt.Color/BLUE)
-                         (= type \0) (java.awt.Color/GREEN)
+                         (= type \0) dark-green
                          (= type \c) (java.awt.Color/BLACK)
                          (= type \b) (java.awt.Color/RED)
                          (= type \S) (java.awt.Color/WHITE)
@@ -82,6 +85,7 @@
 
 
 (defn render-state [gfx state]
+  ; your guys
   (doseq [guy (:guys state)]
     (do
       (.setColor gfx (java.awt.Color/BLACK))
@@ -91,8 +95,11 @@
   (if (= (:turn state) :yours)
     ;uses the ([1 2] 0) way of accessing elems
     (let [selected-guy ((:guys state) (:selection state))] 
-      (draw-tile (:x selected-guy) (:y selected-guy) \S gfx)))
+      (draw-tile (:x selected-guy) (:y selected-guy) \S gfx)
+      ;(draw-walk-radius selected-guy) 
+      ))
 
+  ; bad guys
   (doseq [guy (:badguys state)]
     (do
       (.setColor gfx (java.awt.Color/BLACK))
@@ -110,7 +117,9 @@
   (let [font (Font. "Serif" Font/PLAIN, 14)]
     (.setColor gfx (java.awt.Color/WHITE))
     (.setFont gfx font)
-    (.drawString gfx (str @output) 10 480))
+    (.drawString gfx (str @output) 10 480)
+    (.drawString gfx (:message state) 10 460)
+  )
 )
 
 (defn double-buffer-render [p state]
@@ -156,10 +165,14 @@
         (mod (+ selection 1) (count (:guys state))) 
         old-val)))
 
+  (defn update-message [old-message]
+    old-message)
+
   {:guys (update-guys (:guys state) keys-down keys-up)
    :badguys (update-guys (:badguys state) keys-down keys-up)
    :selection (update-selection (:selection state) keys-down keys-up)
    :turn (update-turn (:turn state) keys-down keys-up)
+   :message (update-message (:message state))
    :tick (+ (:tick state) 1)
   })
 
@@ -173,6 +186,7 @@
                  :badguys [{:type :guy :x 1 :y 2}]
                  :selection 0 ;id of :guys that is selected.
                  :turn :yours
+                 :message "N to switch selection. Arrow keys to choose where to walk, Enter to go there."
                  :tick 0
                 }]
     (double-buffer-render frame state)
