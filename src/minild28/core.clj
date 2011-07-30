@@ -133,6 +133,6 @@
       (.createBufferStrategy 2)
       (.setVisible true))
 
-  (do (game frame)))
+  (future (game frame)))
 
 (-main)
