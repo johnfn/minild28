@@ -55,14 +55,15 @@
     "00000000001100000000"
     "00000000000010000000"
     "00000000000000000000"
-    "00000000000000000000"
+    "00000000000000000000" 
     ])
 
 (defn draw-tile [x-rel y-rel type gfx]
   (let [y-offs 25 x-offs 10]
-    (.setColor gfx (if (= type \1) 
-                     (java.awt.Color/BLUE)
-                     (java.awt.Color/GREEN)))
+    (.setColor gfx (cond (= type \1) (java.awt.Color/BLUE)
+                         (= type \0) (java.awt.Color/GREEN)
+                         (= type \c) (java.awt.Color/BLACK)))
+
     (.fillRect gfx (+ x-offs (* x-rel *t-width*))
                    (+ y-offs (* y-rel *t-width*))
                    *t-width* *t-width*)))
@@ -74,16 +75,16 @@
         (draw-tile x y ch gfx)))))
 
 (defn render-game [gfx player]
-    (.setColor gfx (java.awt.Color/BLACK))
+  (.setColor gfx (java.awt.Color/BLACK))
 
-    (.fillRect gfx 0 0 *size* *size*)
-    (render-map gfx)
+  (.fillRect gfx 0 0 *size* *size*)
+  (render-map gfx)
 
-    (.setColor gfx (java.awt.Color/WHITE))
-    (.fillRect gfx (:x player) (:y player) *t-width* *t-width*)
+  (.setColor gfx (java.awt.Color/WHITE))
+  (draw-tile (:x player) (:y player) \c gfx)
 
-    ;(.setColor (java.awt.Color/BLUE))
-    ;(.fillRect (* 10 (deref x)) (* 10 (deref y)) 10 10)
+  ;(.setColor (java.awt.Color/BLUE))
+  ;(.fillRect (* 10 (deref x)) (* 10 (deref y)) 10 10)
 )
 
 (defn drawRectangle [p player]
@@ -95,7 +96,12 @@
 ))
 
 (defn update-player [player]
-  player)
+  (let [old-x (:x player)
+        old-y (:y player)
+        
+        new-x 2
+        ]
+    player))
 
 (defn game [frame]
   (loop [player {:x 3 :y 3}]
